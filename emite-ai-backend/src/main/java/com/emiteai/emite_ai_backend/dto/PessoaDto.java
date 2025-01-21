@@ -8,6 +8,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @Data
+@NoArgsConstructor
 public class PessoaDto {
 
     private UUID id;
