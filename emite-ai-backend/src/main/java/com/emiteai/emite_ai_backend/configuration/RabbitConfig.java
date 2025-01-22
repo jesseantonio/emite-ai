@@ -9,9 +9,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
+    public static final String REPORT_QUEUE = "reportQueue";
+
     @Bean
     public Queue reportQueue() {
-        return new Queue("reportQueue", true);
+        return new Queue(REPORT_QUEUE, true);
     }
 
     @Bean
