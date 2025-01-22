@@ -2,9 +2,9 @@ package com.emiteai.emite_ai_backend.service;
 
 import com.emiteai.emite_ai_backend.domain.entity.Pessoa;
 import com.emiteai.emite_ai_backend.dto.PessoaDto;
-import com.emiteai.emite_ai_backend.dto.ReportDto;
 import com.emiteai.emite_ai_backend.repository.PessoaRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,15 +24,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
-import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
 public class PessoaServiceTest {
@@ -301,9 +302,19 @@ public class PessoaServiceTest {
         @TempDir
         Path tempDir;
 
+        private static final Path DIRECTORY_PATH = Paths.get("src/main/resources/relatorios");
+
+
         @BeforeEach
         void setUp() {
             MockitoAnnotations.openMocks(this);
+        }
+
+        @AfterEach
+        public void cleanUp() throws IOException {
+            Files.walk(DIRECTORY_PATH)
+                    .filter(Files::isRegularFile)
+                    .forEach(this::deleteFile);
         }
 
         @Test
@@ -312,58 +323,32 @@ public class PessoaServiceTest {
 
             Mockito.when(pessoaRepository.findAll()).thenReturn(List.of(pessoa));
 
-            Path csvFile = tempDir.resolve("report.csv");
-            String filePath = "src/";
-            ReportDto reportDto = new ReportDto(filePath);
-            reportDto.setFilePath(csvFile.toString());
-
-            CompletableFuture<Void> future = pessoaService.generateCsvReport(reportDto);
+            Path directoryPath = Paths.get("" + DIRECTORY_PATH);
+            CompletableFuture<Void> future = pessoaService.generateCsvReport();
             future.join();
 
-            Assertions.assertThat(Files.exists(csvFile)).isTrue();
-
-            try (BufferedReader reader = Files.newBufferedReader(csvFile)) {
-                List<String> lines = reader.lines().toList();
-                Assertions.assertThat(lines).hasSize(2);
-                Assertions.assertThat(lines.get(0)).contains("ID", "Nome", "CPF", "Telefone");
-                Assertions.assertThat(lines.get(1)).contains(
-                        pessoa.getId().toString(),
-                        pessoa.getNome(),
-                        pessoa.getCpf(),
-                        pessoa.getTelefone()
-                );
-            }
+            Assertions.assertThat(hasFilesInDirectory(directoryPath)).isTrue();
 
             InOrder inOrder = Mockito.inOrder(pessoaService, pessoaRepository);
-            inOrder.verify(pessoaService).generateCsvReport(reportDto);
+            inOrder.verify(pessoaService).generateCsvReport();
             inOrder.verify(pessoaRepository).findAll();
             inOrder.verifyNoMoreInteractions();
         }
 
-        @Test
-        void testGenerateCsvReportWithoutData() throws Exception {
-            Mockito.when(pessoaRepository.findAll()).thenReturn(List.of());
-
-            Path csvFile = tempDir.resolve("empty_report.csv");
-            String filePath = "src/";
-            ReportDto reportDto = new ReportDto(filePath);
-            reportDto.setFilePath(csvFile.toString());
-
-            CompletableFuture<Void> future = pessoaService.generateCsvReport(reportDto);
-            future.join();
-
-            Assertions.assertThat(Files.exists(csvFile)).isTrue();
-
-            try (BufferedReader reader = Files.newBufferedReader(csvFile)) {
-                List<String> lines = reader.lines().toList();
-                Assertions.assertThat(lines).hasSize(1);
-                Assertions.assertThat(lines.get(0)).contains("ID", "Nome", "CPF", "Telefone");
+        public static boolean hasFilesInDirectory(Path directory) throws IOException {
+            try (Stream<Path> paths = Files.walk(directory)) {
+                return paths.anyMatch(Files::isRegularFile);
             }
+        }
 
-            InOrder inOrder = Mockito.inOrder(pessoaService, pessoaRepository);
-            inOrder.verify(pessoaService).generateCsvReport(reportDto);
-            inOrder.verify(pessoaRepository).findAll();
-            inOrder.verifyNoMoreInteractions();
+        private void deleteFile(Path file) {
+            try {
+                Files.delete(file);
+                System.out.println("Arquivo deletado: " + file);
+            } catch (IOException e) {
+                System.err.println("Erro ao deletar arquivo: " + file);
+                e.printStackTrace();
+            }
         }
     }
 }

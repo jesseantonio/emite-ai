@@ -122,15 +122,15 @@ class PessoaControllerTest {
             String filePath = "src/";
             ReportDto reportDto = new ReportDto(filePath);
 
-            when(pessoaService.generateCsvReport(reportDto)).thenReturn(CompletableFuture.completedFuture(null));
+            when(pessoaService.generateCsvReport()).thenReturn(CompletableFuture.completedFuture(null));
 
-            ResponseEntity<String> response = pessoaController.processReport(reportDto);
+            ResponseEntity<String> response = pessoaController.processReport();
 
             Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             Assertions.assertThat(response.getBody()).isEqualTo("Relatório está sendo gerado em segundo plano.");
 
             InOrder inOrder = inOrder(pessoaService);
-            inOrder.verify(pessoaService).generateCsvReport(reportDto);
+            inOrder.verify(pessoaService).generateCsvReport();
             inOrder.verifyNoMoreInteractions();
         }
 
@@ -139,15 +139,15 @@ class PessoaControllerTest {
             String filePath = "src/";
             ReportDto reportDto = new ReportDto(filePath);
 
-            when(pessoaService.generateCsvReport(reportDto)).thenThrow(new IOException("Erro ao gerar arquivo"));
+            when(pessoaService.generateCsvReport()).thenThrow(new IOException("Erro ao gerar arquivo"));
 
-            ResponseEntity<String> response = pessoaController.processReport(reportDto);
+            ResponseEntity<String> response = pessoaController.processReport();
 
             Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             Assertions.assertThat(response.getBody()).isEqualTo("Erro ao gerar relatório: Erro ao gerar arquivo");
 
             InOrder inOrder = inOrder(pessoaService);
-            inOrder.verify(pessoaService).generateCsvReport(reportDto);
+            inOrder.verify(pessoaService).generateCsvReport();
             inOrder.verifyNoMoreInteractions();
         }
     }

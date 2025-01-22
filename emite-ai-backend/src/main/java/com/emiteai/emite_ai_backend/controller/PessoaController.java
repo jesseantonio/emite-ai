@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/pessoa")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PessoaController {
 
     @Autowired
@@ -46,9 +47,9 @@ public class PessoaController {
     }
 
     @PostMapping("/process")
-    public ResponseEntity<String> processReport(ReportDto reportDto) {
+    public ResponseEntity<String> processReport() {
         try {
-            CompletableFuture<Void> future = pessoaService.generateCsvReport(reportDto);
+            CompletableFuture<Void> future = pessoaService.generateCsvReport();
             return ResponseEntity.ok("Relatório está sendo gerado em segundo plano.");
         } catch (IOException e) {
             return ResponseEntity.status(500).body("Erro ao gerar relatório: " + e.getMessage());

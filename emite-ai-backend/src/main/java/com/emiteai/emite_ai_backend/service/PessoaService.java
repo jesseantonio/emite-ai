@@ -40,7 +40,7 @@ public class PessoaService {
                 .municipio(pessoaDTO.getMunicipio())
                 .estado(pessoaDTO.getEstado())
                 .createdBy(pessoaDTO.getCreatedBy())
-                .createdAt(pessoaDTO.getCreatedAt())
+                .createdAt(pessoaDTO.getCreatedAt() != null ? pessoaDTO.getCreatedAt() : LocalDateTime.now())
                 .lastModificationBy(pessoaDTO.getLastModificationBy())
                 .lastModificationAt(LocalDateTime.now())
                 .build();
@@ -77,10 +77,11 @@ public class PessoaService {
     }
 
     @Async
-    public CompletableFuture<Void> generateCsvReport(ReportDto reportDto) throws IOException {
+    public CompletableFuture<Void> generateCsvReport() throws IOException {
         List<Pessoa> pessoas = pessoaRepository.findAll();
+        String fileName = "relatorio-pessoas" +  System.currentTimeMillis() + ".csv";
 
-        try (CSVWriter writer = new CSVWriter(new FileWriter(reportDto.getFilePath()))) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter("src/main/resources/relatorios/" + fileName))) {
             writer.writeNext(new String[]{
                     "ID", "Nome", "CPF", "Telefone", "Número", "Complemento",
                     "CEP", "Bairro", "Município", "Estado", "Criado Por",
