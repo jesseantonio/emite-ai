@@ -16,8 +16,4 @@ public class RabbitConfig {
         return new Queue(REPORT_QUEUE, true);
     }
 
-    @Bean
-    public Exchange fanoutExchange() {
-        return new FanoutExchange("reportExchange");
-    }
 }
