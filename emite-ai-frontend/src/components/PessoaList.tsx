@@ -144,7 +144,7 @@ const PessoaList: React.FC = () => {
 
   const handleProcess = async () => {
     try {
-      await api.post(`/pessoa/process`);
+      await api.post(`/process`);
 
       setMessage('Relatório está sendo gerado em segundo plano, consulte a pasta relatórios dentro do projeto que ele estará lá.');
       setSeverity('info');
